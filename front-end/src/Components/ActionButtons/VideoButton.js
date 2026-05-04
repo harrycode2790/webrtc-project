@@ -41,9 +41,8 @@ const VideoButton = ({
     }
 
     return(
-        <div className="button-wrapper video-button d-inline-block">
-            <i className="fa fa-caret-up choose-video"></i>
-            <div className="button camera" onClick={startStopVideo}>
+        <div className="button-wrapper video-button">
+            <div className="button control-button camera" onClick={startStopVideo}>
                 <i className="fa fa-video"></i>
                 <div className="btn-text">{callStatus.videoEnabled ? "Stop" : "Start"} Video</div>
             </div>

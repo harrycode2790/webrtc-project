@@ -37,9 +37,8 @@ const AudioButton = ({callStatus, updateCallStatus, localStream, peerConnection}
     }
 
     return(
-        <div className="button-wrapper d-inline-block">
-            <i className="fa fa-caret-up choose-audio"></i>
-            <div className="button mic" onClick={startStopAudio}>
+        <div className="button-wrapper">
+            <div className="button control-button mic" onClick={startStopAudio}>
                 <i className="fa fa-microphone"></i>
                 <div className="btn-text">{micText}</div>
             </div>

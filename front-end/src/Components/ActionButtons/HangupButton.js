@@ -46,7 +46,7 @@ const HangupButton = ({
     return(
         <button 
             onClick={hangupCall} 
-            className="btn btn-danger hang-up"
+            className="hangup-button"
         >Hang Up</button>
     )
 }

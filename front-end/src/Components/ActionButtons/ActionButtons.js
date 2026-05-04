@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import HangupButton from './HangupButton'
 import VideoButton from './VideoButton';
 import AudioButton from './AudioButton';
@@ -17,11 +16,9 @@ const ActionButtons = ({
     setOfferData,
     userName
 })=>{
-    const menuButtons = useRef(null)
-
     return(
-        <div id="menu-buttons" ref={menuButtons} className="row">
-            <div className="left col-6">
+        <div id="menu-buttons" className="control-dock">
+            <div className="control-group">
                 <AudioButton 
                     localFeedEl={localFeedEl}
                     callStatus={callStatus}
@@ -37,7 +34,7 @@ const ActionButtons = ({
                     peerConnection={peerConnection}
                 />
             </div>
-            <div className="center justify-center text-end col-2 hangup-wrapper">
+            <div className="control-group control-group-danger">
                 <HangupButton
                     localFeedEl={localFeedEl}
                     remoteFeedEl={remoteFeedEl}

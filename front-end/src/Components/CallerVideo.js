@@ -154,7 +154,7 @@ const CallerVideo = ({
   }, [peerConnection, userName, updateCallStatus, callStatus, localStream, remoteStream, setLocalStream, setRemoteStream, setPeerConnection, setOfferData, navigate]);
 
   return (
-    <div>
+    <div className="call-page">
       <div className="videos">
         <VideoMessageBox message={videoMessage} />
         <video
@@ -163,6 +163,7 @@ const CallerVideo = ({
           autoPlay
           controls
           playsInline
+          muted
         ></video>
         <video
           id="remote-feed"
@@ -172,20 +173,23 @@ const CallerVideo = ({
           playsInline
         ></video>
       </div>
-      <ActionButtons
-        localFeedEl={localFeedEl}
-        remoteFeedEl={remoteFeedEl}
-        callStatus={callStatus}
-        localStream={localStream}
-        remoteStream={remoteStream}
-        updateCallStatus={updateCallStatus}
-        peerConnection={peerConnection}
-        setLocalStream={setLocalStream}
-        setRemoteStream={setRemoteStream}
-        setPeerConnection={setPeerConnection}
-        setOfferData={setOfferData}
-        userName={userName}
-      />
+      <div className="call-footer">
+        <div className="call-status-pill">Caller View</div>
+        <ActionButtons
+          localFeedEl={localFeedEl}
+          remoteFeedEl={remoteFeedEl}
+          callStatus={callStatus}
+          localStream={localStream}
+          remoteStream={remoteStream}
+          updateCallStatus={updateCallStatus}
+          peerConnection={peerConnection}
+          setLocalStream={setLocalStream}
+          setRemoteStream={setRemoteStream}
+          setPeerConnection={setPeerConnection}
+          setOfferData={setOfferData}
+          userName={userName}
+        />
+      </div>
     </div>
   );
 };

@@ -1,7 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import prepForCall from '../webrtcUtilities/prepForCall'
 import socketConnection from '../webrtcUtilities/socketConnection'
-import { useState } from 'react'
 import createPeerConnection from '../webrtcUtilities/createPeerConn'
 import { useNavigate } from 'react-router-dom';
 
@@ -12,6 +11,7 @@ const Home = ({callStatus,updateCallStatus,setLocalStream,
     const [ typeOfCall, setTypeOfCall ] = useState()
     const [joined, setJoined] = useState(false)
     const [availableCalls, setAvailableCalls] = useState([])
+    const [nameInput, setNameInput] = useState(userName || "")
     const navigate = useNavigate();
 
     //called on "Call" or "Answer"
@@ -33,9 +33,7 @@ const Home = ({callStatus,updateCallStatus,setLocalStream,
     //Nothing happens until the user clicks join
     //(Helps with React double render)
     useEffect(()=>{
-        if(joined){
-            const userName = prompt("Enter your name")
-            setUserName(userName)
+        if(joined && userName){
             const setCalls = data => {
                 setAvailableCalls(data)
                 console.log("available calls",data)
@@ -49,7 +47,7 @@ const Home = ({callStatus,updateCallStatus,setLocalStream,
                 socket.off("newOfferAwaiting", setCalls)
             }
         }
-    },[joined, setUserName])
+    },[joined, setUserName, userName])
 
 
     //We have media via GUM. setup the peerConnection w/listeners
@@ -83,45 +81,155 @@ const Home = ({callStatus,updateCallStatus,setLocalStream,
         await initCall("answer")
     }
 
+    const joinLobby = e => {
+        e.preventDefault()
+        const trimmedName = nameInput.trim()
+
+        if(!trimmedName){
+            return
+        }
+
+        setUserName(trimmedName)
+        setJoined(true)
+    }
+
     if(!joined){
         return(
-            <div className="container d-flex align-items-center justify-content-center min-vh-100">
-                <button 
-                    onClick={()=>setJoined(true)} 
-                    className="btn btn-primary btn-lg"
-                >Join</button>
-            </div> 
+            <main className="app-shell home-shell">
+                <section className="lobby-stage">
+                    <div className="lobby-copy panel">
+                        <span className="eyebrow">Live Lobby</span>
+                        <h1>Walk into the room before the call starts.</h1>
+                        <p>
+                            Pick a display name, enter the lobby, and handle live calls from
+                            a layout that feels more like a modern session desk than a starter app.
+                        </p>
+                        <div className="lobby-highlights">
+                            <div className="highlight-chip">Fast join flow</div>
+                            <div className="highlight-chip">Responsive layout</div>
+                            <div className="highlight-chip">Live incoming offers</div>
+                        </div>
+                    </div>
+
+                    <form className="join-card join-card-alt" onSubmit={joinLobby}>
+                        <div className="join-card-heading">
+                            <span className="panel-kicker">Step 1</span>
+                            <h2>Enter the lobby</h2>
+                        </div>
+                        <label className="field-label" htmlFor="userName">
+                            Display name
+                        </label>
+                        <input
+                            id="userName"
+                            className="name-input"
+                            type="text"
+                            value={nameInput}
+                            onChange={event => setNameInput(event.target.value)}
+                            placeholder="e.g. Harry"
+                            autoComplete="name"
+                        />
+                        <p className="field-note">
+                            This name appears to other people when you create or answer a call.
+                        </p>
+                        <button
+                            type="submit"
+                            className="primary-button"
+                            disabled={!nameInput.trim()}
+                        >
+                            Join Lobby
+                        </button>
+                    </form>
+                </section>
+            </main> 
         )
     }
 
     return (
-        <div className="container">
-            <div className="row">
-                <h1>{userName}</h1>
-                <div className="col-6"> 
-                    <h2>Make a call</h2>
-                    <button 
-                        onClick={call} 
-                        className="btn btn-success btn-lg hang-up"
-                    >
-                        Start Call
-                    </button>
-                </div>
-                <div className="col-6"> 
-                    <h2>Available Calls</h2>
-                    {availableCalls.map((callData,i)=>
-                        <div className="col mb-2" key={i}>
-                            <button 
-                                onClick={()=>{answer(callData)}}
-                                className="btn btn-lg btn-warning hang-up"
-                        >
-                            Answer Call From {callData.offererUserName}
-                            </button>
+        <main className="app-shell home-shell">
+            <section className="lobby-board">
+                <header className="lobby-board-header panel">
+                    <div className="identity-block">
+                        <span className="eyebrow">Connected</span>
+                        <h1>{userName}</h1>
+                        <p>Your session is live. Start a room or jump into any active offer below.</p>
+                    </div>
+                    <div className="identity-meta">
+                        <div className="meta-card">
+                            <span className="meta-label">Open Calls</span>
+                            <strong>{availableCalls.length}</strong>
                         </div>
-                    )}
+                        <button onClick={call} className="primary-button">
+                            Start Call
+                        </button>
+                    </div>
+                </header>
+
+                <div className="lobby-columns">
+                    <article className="panel launch-panel">
+                        <div className="launch-panel-copy">
+                            <span className="panel-kicker">Create</span>
+                            <h2>Open a fresh room for a new conversation.</h2>
+                            <p>
+                                Your offer goes live immediately, then anyone in the lobby can
+                                answer and connect.
+                            </p>
+                        </div>
+                        <div className="launch-panel-actions">
+                            <button onClick={call} className="primary-button">
+                                Create Offer
+                            </button>
+                            <div className="launch-note">
+                                Best when you want to host and wait for someone to join.
+                            </div>
+                        </div>
+                    </article>
+
+                    <section className="panel queue-panel">
+                        <div className="queue-header">
+                            <div>
+                                <span className="panel-kicker">Queue</span>
+                                <h2>Incoming call board</h2>
+                            </div>
+                            <span className="calls-count">
+                                {availableCalls.length} waiting
+                            </span>
+                        </div>
+
+                        {availableCalls.length ? (
+                            <div className="queue-list">
+                                {availableCalls.map((callData,i)=>
+                                    <button
+                                        key={i}
+                                        onClick={()=>{answer(callData)}}
+                                        className="queue-item"
+                                    >
+                                        <div className="queue-avatar">
+                                            {callData.offererUserName?.slice(0,1).toUpperCase()}
+                                        </div>
+                                        <div className="queue-copy">
+                                            <span className="call-card-label">Incoming Offer</span>
+                                            <strong>{callData.offererUserName}</strong>
+                                            <span className="call-card-meta">
+                                                Answer now and join the live video session.
+                                            </span>
+                                        </div>
+                                        <span className="queue-action">Answer</span>
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="empty-state empty-state-alt">
+                                <h3>The board is quiet right now</h3>
+                                <p>
+                                    No one is calling yet. Start a room and the next participant
+                                    will see it here from their lobby.
+                                </p>
+                            </div>
+                        )}
+                    </section>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     )
 }
 

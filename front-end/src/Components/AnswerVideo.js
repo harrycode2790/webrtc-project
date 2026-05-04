@@ -124,26 +124,29 @@ const AnswerVideo = ({remoteStream, localStream,peerConnection,
     
 
     return (
-        <div>
+        <div className="call-page">
             <div className="videos">
                 <VideoMessageBox message={videoMessage} />
-                <video id="local-feed" ref={localFeedEl} autoPlay controls playsInline></video>
+                <video id="local-feed" ref={localFeedEl} autoPlay controls playsInline muted></video>
                 <video id="remote-feed" ref={remoteFeedEl} autoPlay controls playsInline></video> 
             </div>
-            <ActionButtons 
-                localFeedEl={localFeedEl}
-                remoteFeedEl={remoteFeedEl}
-                callStatus={callStatus}
-                localStream={localStream}
-                remoteStream={remoteStream}
-                updateCallStatus={updateCallStatus}
-                peerConnection={peerConnection}
-                setLocalStream={setLocalStream}
-                setRemoteStream={setRemoteStream}
-                setPeerConnection={setPeerConnection}
-                setOfferData={setOfferData}
-                userName={userName}
-            />
+            <div className="call-footer">
+                <div className="call-status-pill">Answer View</div>
+                <ActionButtons 
+                    localFeedEl={localFeedEl}
+                    remoteFeedEl={remoteFeedEl}
+                    callStatus={callStatus}
+                    localStream={localStream}
+                    remoteStream={remoteStream}
+                    updateCallStatus={updateCallStatus}
+                    peerConnection={peerConnection}
+                    setLocalStream={setLocalStream}
+                    setRemoteStream={setRemoteStream}
+                    setPeerConnection={setPeerConnection}
+                    setOfferData={setOfferData}
+                    userName={userName}
+                />
+            </div>
         </div>
     )
 }

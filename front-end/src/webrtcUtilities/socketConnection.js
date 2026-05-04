@@ -16,8 +16,7 @@ const socketConnection = userName =>{
                 // This is only a lightweight demo gate. Do not treat it as real auth.
                 password: signalingPassword,
                 userName, 
-            },
-            withCredentials: true
+            }
         });
         if(userName === 'test'){
             console.log("Testing...")

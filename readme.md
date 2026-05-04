@@ -83,6 +83,10 @@ git push -u origin main
 REACT_APP_SOCKET_URL=https://your-signaling-server.example.com
 REACT_APP_SIGNALING_PASSWORD=your-demo-password
 REACT_APP_ICE_SERVERS=[{"urls":["stun:stun.l.google.com:19302"]},{"urls":["turn:your-turn-host:3478?transport=udp","turn:your-turn-host:3478?transport=tcp"],"username":"your-turn-username","credential":"your-turn-password"}]
+
+
+REACT_APP_ICE_SERVERS=[{"urls":["stun:fr-turn7.xirsys.com"]},{"username":"voOrNRtXqRYuEv1Zld9fJ9itkqklfD8X7CNpUma5U1-TQUaZdQC2Ifp1Vi-qRX32AAAAAGn4mnVoYXJyeWNvZGU=","credential":"705e9ede-47ba-11f1-bb3d-820343dbece9","urls":["turn:fr-turn7.xirsys.com:80?transport=udp","turn:fr-turn7.xirsys.com:3478?transport=udp","turn:fr-turn7.xirsys.com:80?transport=tcp","turn:fr-turn7.xirsys.com:3478?transport=tcp","turns:fr-turn7.xirsys.com:443?transport=tcp","turns:fr-turn7.xirsys.com:5349?transport=tcp"]}]
+
 ```
 
 ### 3. Deploy backend to a Node host

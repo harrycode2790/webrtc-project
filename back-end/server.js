@@ -23,6 +23,7 @@ const expressServer = http.createServer(app);
 const io = socketio(expressServer,{
     cors: {
         origin: CLIENT_ORIGINS,
+        credentials: true,
         methods: ["GET", "POST"]
     },
     transports: ["polling", "websocket"]

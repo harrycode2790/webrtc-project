@@ -1,10 +1,9 @@
 import { useEffect } from 'react'
 import prepForCall from '../webrtcUtilities/prepForCall'
 import socketConnection from '../webrtcUtilities/socketConnection'
-import clientSocketListeners from '../webrtcUtilities/clientSocketListeners'
 import { useState } from 'react'
 import createPeerConnection from '../webrtcUtilities/createPeerConn'
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Home = ({callStatus,updateCallStatus,setLocalStream,
     setRemoteStream,remoteStream,peerConnection,setPeerConnection,
@@ -17,53 +16,71 @@ const Home = ({callStatus,updateCallStatus,setLocalStream,
 
     //called on "Call" or "Answer"
     const initCall = async(typeOfCall)=>{
-
+        setTypeOfCall(typeOfCall)
+        await prepForCall(callStatus,updateCallStatus,setLocalStream)
+        console.log("got media")
     }
 
     //Test backend connection
-    // useEffect(()=>{
-    //     const test = async()=>{
-    //         const socket = socketConnection("test")
-    //     }
-    //     //if this works, you will get pong in the console!
-    //     test()
-    // },[])
+    //  useEffect(()=>{
+    //    const test = async()=>{
+    //          const socket = socketConnection("test")
+    //      }
+    //      //if this works, you will get pong in the console!
+    //      test()
+    //  },[])
     
     //Nothing happens until the user clicks join
     //(Helps with React double render)
     useEffect(()=>{
+        if(joined){
+            const userName = prompt("Enter your name")
+            setUserName(userName)
+            const setCalls = data => {
+                setAvailableCalls(data)
+                console.log("available calls",data)
+            }
+            const socket = socketConnection(userName)
+            socket.on("availableOffers", setCalls)
+            socket.on("newOfferAwaiting", setCalls)
 
-    },[joined])
+            return ()=>{
+                socket.off("availableOffers", setCalls)
+                socket.off("newOfferAwaiting", setCalls)
+            }
+        }
+    },[joined, setUserName])
 
 
     //We have media via GUM. setup the peerConnection w/listeners
     useEffect(()=>{
-
-    },[callStatus.haveMedia])
-
-    //We know which type of client this is and have PC.
-    //Add socketlisteners
-    useEffect(()=>{
-
-    },[typeOfCall,peerConnection])
+        if(callStatus.haveMedia && typeOfCall && userName && !peerConnection){   
+            const {peerConnection, remoteStream} = createPeerConnection(userName, typeOfCall)
+            setPeerConnection(peerConnection)
+            setRemoteStream(remoteStream)
+         }
+    },[callStatus.haveMedia, peerConnection, setPeerConnection, setRemoteStream, typeOfCall, userName])
 
     //once remoteStream AND pc are ready, navigate
     useEffect(()=>{
+        if(remoteStream && peerConnection && typeOfCall){
+             navigate(`/${typeOfCall}`)
+        }
+       
 
-    },[remoteStream,peerConnection])
+    },[remoteStream,peerConnection, navigate, typeOfCall])
 
-    useEffect(()=>{
-        
-    })
 
     const call = async()=>{
         //call related stuff goes here
+        await initCall("offer")
         
     }
 
-    const answer = (callData)=>{
+    const answer = async(callData)=>{
         //answer related stuff goes here
-
+        setOfferData(callData)
+        await initCall("answer")
     }
 
     if(!joined){

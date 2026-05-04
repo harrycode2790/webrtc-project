@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-
-const AudioButton = ({callStatus, setCallStatus,localStream,peerConnection})=>{
+const AudioButton = ({callStatus, updateCallStatus, localStream, peerConnection})=>{
 
     let micText;
     if(callStatus.audio === "off"){
@@ -17,7 +15,7 @@ const AudioButton = ({callStatus, setCallStatus,localStream,peerConnection})=>{
         if(callStatus.audioEnabled === true){
             //update redux callStatus
             copyCallStatus.audioEnabled = false
-            setCallStatus(copyCallStatus)
+            updateCallStatus(copyCallStatus)
             //set the stream to disabled
             const tracks = localStream.getAudioTracks();
             tracks.forEach(t=>t.enabled = false);
@@ -25,7 +23,7 @@ const AudioButton = ({callStatus, setCallStatus,localStream,peerConnection})=>{
         //second, check if the audio is disabled, if so enable
             //update redux callStatus
             copyCallStatus.audioEnabled = true
-            setCallStatus(copyCallStatus)
+            updateCallStatus(copyCallStatus)
             const tracks = localStream.getAudioTracks();
             tracks.forEach(t=>t.enabled = true);
         }else{

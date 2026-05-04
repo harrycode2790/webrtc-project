@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 import CallerVideo from './Components/CallerVideo'
 import AnswerVideo from './Components/AnswerVideo'
@@ -44,8 +44,10 @@ function App() {
             remoteStream={remoteStream}
             setRemoteStream={setRemoteStream}  
             peerConnection={peerConnection}
+            setPeerConnection={setPeerConnection}
             userName={userName}
-            setUserName={setUserName}            
+            setUserName={setUserName}
+            setOfferData={setOfferData}
           />} 
         />
         <Route exact path="/answer" element={
@@ -57,9 +59,11 @@ function App() {
             remoteStream={remoteStream}
             setRemoteStream={setRemoteStream}               
             peerConnection={peerConnection}
+            setPeerConnection={setPeerConnection}
             userName={userName}
             setUserName={setUserName}
             offerData={offerData}
+            setOfferData={setOfferData}
           />} 
         />
       </Routes>

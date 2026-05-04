@@ -1,9 +1,6 @@
 //Share this function for both sides, answer and caller
 // because both sides need to do this same thing before
 // we can move forward
-import socketConnection from "./socketConnection";
-
-
 const prepForCall = (callStatus,updateCallStatus,setLocalStream)=>{
     return new Promise(async(resolve, reject)=>{
         //can bring constraints in as a param

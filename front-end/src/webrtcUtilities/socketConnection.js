@@ -1,6 +1,9 @@
 import { io } from 'socket.io-client';
 
 let socket;
+const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:8181';
+const signalingPassword = process.env.REACT_APP_SIGNALING_PASSWORD || 'x';
+
 const socketConnection = userName =>{
     //check to see if the socket is already connected
     if(socket && socket.connected){
@@ -8,22 +11,30 @@ const socketConnection = userName =>{
         return socket;
     }else{
         //its not connected... connect!
-        socket = io.connect('http://localhost:8181',{
-        // socket = io.connect('https://192.168.1.44:8181',{
+        socket = io.connect(socketUrl,{
             auth: {
-                // jwt,
-                password: "x",
+                // This is only a lightweight demo gate. Do not treat it as real auth.
+                password: signalingPassword,
                 userName, 
-            }
+            },
+            withCredentials: true
         });
-        if(userName == 'test'){
+        if(userName === 'test'){
             console.log("Testing...")
-            const ping = socket.emitWithAck('test').then(resp=>{
+            socket.emitWithAck('test').then(resp=>{
                 console.log(resp)
             })
         }
         
         return socket;
+    }
+}
+
+export const closeSocketConnection = () => {
+    if(socket){
+        socket.removeAllListeners()
+        socket.disconnect()
+        socket = null
     }
 }
 

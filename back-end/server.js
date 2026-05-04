@@ -1,37 +1,38 @@
-
-const fs = require('fs');
-const https = require('https')
 const http = require('http')
 const express = require('express');
 const app = express();
 const socketio = require('socket.io');
+
+const PORT = Number(process.env.PORT || 8181);
+const SIGNALING_PASSWORD = process.env.SIGNALING_PASSWORD || 'x';
+const CLIENT_ORIGINS = (process.env.CLIENT_ORIGINS || 'http://localhost:3000,https://localhost:3000')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
 app.use(express.static(__dirname))
-
-//we need a key and cert to run https
-//we generated them with mkcert
-// $ mkcert create-ca
-// $ mkcert create-cert
-// const key = fs.readFileSync('cert.key');
-// const cert = fs.readFileSync('cert.crt');
-
-//we changed our express setup so we can use https
-//pass the key and cert to createServer on https
-// const expressServer = https.createServer({key, cert}, app);
+app.get('/health', (_req, res) => {
+    res.json({
+        ok: true,
+        uptime: process.uptime()
+    })
+})
 
 const expressServer = http.createServer(app);
 //create our socket.io server... it will listen to our express port
 const io = socketio(expressServer,{
     cors: {
-        origin: [
-            "https://localhost:3000",
-            // 'https://LOCAL-DEV-IP-HERE' //if using a phone or another computer
-        ],
+        origin: CLIENT_ORIGINS,
         methods: ["GET", "POST"]
-    }
+    },
+    transports: ["polling", "websocket"]
 });
 
 
-expressServer.listen(8181);
+expressServer.listen(PORT, () => {
+    console.log(`Signaling server listening on port ${PORT}`);
+    console.log(`Allowed origins: ${CLIENT_ORIGINS.join(', ')}`);
+});
 
 //offers will contain {}
 const offers = [
@@ -46,15 +47,23 @@ const connectedSockets = [
     //username, socketId
 ]
 
+const removeSocketFromCollections = socketId => {
+    const connectedSocketIndex = connectedSockets.findIndex(s => s.socketId === socketId)
+    if(connectedSocketIndex !== -1){
+        connectedSockets.splice(connectedSocketIndex, 1)
+    }
+}
+
 io.on('connection',(socket)=>{
     // console.log("Someone has connected");
     const userName = socket.handshake.auth.userName;
     const password = socket.handshake.auth.password;
 
-    if(password !== "x"){
+    if(password !== SIGNALING_PASSWORD){
         socket.disconnect(true);
         return;
     }
+    removeSocketFromCollections(socket.id)
     connectedSockets.push({
         socketId: socket.id,
         userName
@@ -95,7 +104,7 @@ io.on('connection',(socket)=>{
         console.log("Requested offerer",offerObj.offererUserName)
         //emit this answer (offerObj) back to CLIENT1
         //in order to do that, we need CLIENT1's socketid
-        const socketToAnswer = connectedSockets.find(s=>s.userName === offerObj.offererUserName)
+        const socketToAnswer = [...connectedSockets].reverse().find(s=>s.userName === offerObj.offererUserName)
         if(!socketToAnswer){
             console.log("No matching socket")
             return;
@@ -112,10 +121,8 @@ io.on('connection',(socket)=>{
         ackFunction(offerToUpdate.offerIceCandidates);
         offerToUpdate.answer = offerObj.answer
         offerToUpdate.answererUserName = userName
-        //socket has a .to() which allows emiting to a "room"
-        //every socket has it's own room
         console.log(socketIdToAnswer)
-        socket.to(socketIdToAnswer).emit('answerResponse',offerToUpdate)
+        io.to(socketIdToAnswer).emit('answerResponse',offerToUpdate)
     })
 
     socket.on('sendIceCandidateToSignalingServer',iceCandidateObj=>{
@@ -130,9 +137,9 @@ io.on('connection',(socket)=>{
                 // 2. Any candidates that come in after the offer has been answered, will be passed through
                 if(offerInOffers.answererUserName){
                     //pass it through to the other socket
-                    const socketToSendTo = connectedSockets.find(s=>s.userName === offerInOffers.answererUserName);
+                    const socketToSendTo = [...connectedSockets].reverse().find(s=>s.userName === offerInOffers.answererUserName);
                     if(socketToSendTo){
-                        socket.to(socketToSendTo.socketId).emit('receivedIceCandidateFromServer',iceCandidate)
+                        io.to(socketToSendTo.socketId).emit('receivedIceCandidateFromServer',iceCandidate)
                     }else{
                         console.log("Ice candidate recieved but could not find answere")
                     }
@@ -142,9 +149,13 @@ io.on('connection',(socket)=>{
             //this ice is coming from the answerer. Send to the offerer
             //pass it through to the other socket
             const offerInOffers = offers.find(o=>o.answererUserName === iceUserName);
-            const socketToSendTo = connectedSockets.find(s=>s.userName === offerInOffers.offererUserName);
+            if(!offerInOffers){
+                console.log("No offer found for answerer ice candidate")
+                return;
+            }
+            const socketToSendTo = [...connectedSockets].reverse().find(s=>s.userName === offerInOffers.offererUserName);
             if(socketToSendTo){
-                socket.to(socketToSendTo.socketId).emit('receivedIceCandidateFromServer',iceCandidate)
+                io.to(socketToSendTo.socketId).emit('receivedIceCandidateFromServer',iceCandidate)
             }else{
                 console.log("Ice candidate recieved but could not find offerer")
             }
@@ -152,9 +163,43 @@ io.on('connection',(socket)=>{
         // console.log(offers)
     })
 
+    socket.on('hangup', ({ userName, role })=>{
+        const offerIndex = offers.findIndex(offer => {
+            if(role === "answer"){
+                return offer.answererUserName === userName;
+            }
+
+            return offer.offererUserName === userName;
+        })
+
+        if(offerIndex === -1){
+            io.emit('availableOffers',offers);
+            return;
+        }
+
+        const offerToClear = offers[offerIndex]
+        const otherUserName = role === "answer"
+            ? offerToClear.offererUserName
+            : offerToClear.answererUserName
+
+        offers.splice(offerIndex,1)
+
+        if(otherUserName){
+            const socketToNotify = [...connectedSockets].reverse().find(s=>s.userName === otherUserName)
+            if(socketToNotify){
+                io.to(socketToNotify.socketId).emit('callEnded')
+            }
+        }
+
+        io.emit('availableOffers',offers);
+    })
+
     socket.on('disconnect',()=>{
+        removeSocketFromCollections(socket.id)
         const offerToClear = offers.findIndex(o=>o.offererUserName === userName)
-        offers.splice(offerToClear,1)
-        socket.emit('availableOffers',offers);
+        if(offerToClear !== -1){
+            offers.splice(offerToClear,1)
+        }
+        io.emit('availableOffers',offers);
     })
 })

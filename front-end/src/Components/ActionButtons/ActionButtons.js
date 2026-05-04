@@ -1,11 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import HangupButton from './HangupButton'
-import socket from '../../webrtcUtilities/socketConnection'
 import VideoButton from './VideoButton';
 import AudioButton from './AudioButton';
 
-const ActionButtons = ({callStatus,localFeedEl, remoteFeedEl,updateCallStatus,localStream,peerConnection})=>{
-    // const callStatus = useSelector(state=>state.callStatus);
+const ActionButtons = ({
+    callStatus,
+    localFeedEl,
+    remoteFeedEl,
+    updateCallStatus,
+    localStream,
+    remoteStream,
+    peerConnection,
+    setLocalStream,
+    setRemoteStream,
+    setPeerConnection,
+    setOfferData,
+    userName
+})=>{
     const menuButtons = useRef(null)
 
     return(
@@ -33,6 +44,13 @@ const ActionButtons = ({callStatus,localFeedEl, remoteFeedEl,updateCallStatus,lo
                     peerConnection={peerConnection}
                     callStatus={callStatus}
                     updateCallStatus={updateCallStatus}
+                    localStream={localStream}
+                    remoteStream={remoteStream}
+                    setLocalStream={setLocalStream}
+                    setRemoteStream={setRemoteStream}
+                    setPeerConnection={setPeerConnection}
+                    setOfferData={setOfferData}
+                    userName={userName}
                 />
             </div>        
         </div>
